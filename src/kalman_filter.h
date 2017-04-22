@@ -11,7 +11,7 @@ public:
   // state covariance matrix
   Eigen::MatrixXd P_;
 
-  // state transistion matrix
+  // state transition matrix
   Eigen::MatrixXd F_;
 
   // process covariance matrix
@@ -63,6 +63,14 @@ public:
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
+
+private:
+  /**
+   * Maps from Cartesian coordinates to polar coordinates.
+   * corresponds to the h(x') function. Used with Extended Kalman Filter
+   * equations.
+   */
+  Eigen::VectorXd MapCartesianToPolar(Eigen::VectorXd& x_state);
 
 };
 
