@@ -36,18 +36,29 @@ FusionEKF::FusionEKF() {
    * Finish initializing the FusionEKF.
    * Set the process and measurement noises
    */
-  ekf_.P_ = MatrixXd(4, 4);
-  ekf_.P_ << 1, 0, 0, 0,
+  VectorXd x = VectorXd(4);
+  MatrixXd P = MatrixXd(4, 4);
+  P << 1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1000, 0,
             0, 0, 0, 1000;
-  ekf_.F_ = MatrixXd(4, 4);
-  ekf_.F_ << 1 ,0, 1, 0,
+  MatrixXd F = MatrixXd(4, 4);
+  F << 1 ,0, 1, 0,
             0, 1, 0, 1,
             0, 0, 1, 0,
             0, 0, 0, 1;
-  ekf_.H_ = MatrixXd(1, 4);
-  ekf_.H_ << 1, 1, 0, 0;
+  MatrixXd H = MatrixXd(2, 4);
+  H << 1, 0, 0, 0,
+    0, 1, 0, 0;
+
+  // process covariance matrix
+  MatrixXd Q = MatrixXd(4, 4);
+  Q << 0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0,
+  0, 0, 0, 0;
+
+  ekf_.Init(x, P, F, H, R_laser_, Q);
 }
 
 /**
@@ -90,8 +101,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
        */
       ekf_.x_ << measurement_pack.raw_measurements_(0),
                 measurement_pack.raw_measurements_(1),
-                measurement_pack.raw_measurements_(2),
-                measurement_pack.raw_measurements_(3);
+                0,
+                0;
     }
 
     // done initializing, no need to predict or update
