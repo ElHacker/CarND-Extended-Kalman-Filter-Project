@@ -1,6 +1,6 @@
 #include "kalman_filter.h"
-#include "tools.h"
 #include <math.h>
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -37,25 +37,30 @@ void KalmanFilter::Update(const VectorXd &z) {
   MatrixXd K = P_ * Ht * Si;
 
   // new state
+  x_ = x_ + (K * y);
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  x_ = x_ + (K * y);
   P_ = (I - K * H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  Tools tools;
-  MatrixXd jacobian = tools.CalculateJacobian(x_);
   VectorXd y = z - MapCartesianToPolar(x_);
-  MatrixXd jacobianT = jacobian.transpose();
-  MatrixXd S = jacobian * P_ * jacobianT + R_;
+  // Adjust angle phi (bearing) to be between -PI and PI;
+  while (y[1] < -M_PI) {
+     y[1] += 2 * M_PI;
+  }
+  while (y[1] > M_PI) {
+    y[1] -= 2 * M_PI;
+  }
+  MatrixXd Ht = H_.transpose();
+  MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
-  MatrixXd K = P_ * jacobianT * Si;
+  MatrixXd K = P_ * Ht * Si;
 
   // new state
+  x_ = x_ + (K * y);
   long x_size = x_.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  x_ = x_ + (K * y);
   P_ = (I - K * H_) * P_;
 }
 
@@ -66,8 +71,15 @@ VectorXd KalmanFilter::MapCartesianToPolar(VectorXd& x_state) {
   float py = x_state(1);
   float vx = x_state(2);
   float vy = x_state(3);
+  // rho
   float range = sqrt(pow(px, 2) + pow(py, 2));
-  float bearing = atan(py / px);
+  // phi
+  float bearing = atan2(py, px);
+  if (fabs(range) < 0.0001) {
+    std::cout << "ConvertPolar() - Error - Division by Zero" << std::endl;
+    return result;
+  }
+  // rhodot
   float rangeRate = (px * vx + py * vy) / range;
 
   result << range,
