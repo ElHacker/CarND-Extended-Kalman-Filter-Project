@@ -81,7 +81,7 @@ VectorXd KalmanFilter::MapCartesianToPolar(VectorXd& x_state) {
   // phi
   float bearing = atan2(py, px);
   if (fabs(range) < 0.0001) {
-    cout << "MapCartesianToPolar() - Error: Division by Zero" << endl;
+    cout << "MapCartesianToPolar() - Error: range Division by Zero" << endl;
     return result;
   }
   // rhodot
