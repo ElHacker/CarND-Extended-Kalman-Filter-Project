@@ -2,6 +2,7 @@
 #include <math.h>
 #include <iostream>
 
+using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -34,7 +35,7 @@ void KalmanFilter::Update(const VectorXd &z) {
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
-  MatrixXd K = P_ * Ht * Si;
+  MatrixXd K = (P_ * Ht) * Si;
 
   // new state
   x_ = x_ + (K * y);
@@ -55,7 +56,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   MatrixXd Ht = H_.transpose();
   MatrixXd S = H_ * P_ * Ht + R_;
   MatrixXd Si = S.inverse();
-  MatrixXd K = P_ * Ht * Si;
+  MatrixXd K = (P_ * Ht) * Si;
 
   // new state
   x_ = x_ + (K * y);
@@ -73,10 +74,14 @@ VectorXd KalmanFilter::MapCartesianToPolar(VectorXd& x_state) {
   float vy = x_state(3);
   // rho
   float range = sqrt(pow(px, 2) + pow(py, 2));
+  // avoid division by zero
+  if(fabs(px) < 0.0001){
+    cout << "MapCartesianToPolar() - Error: px Division by Zero" << endl;
+  }
   // phi
   float bearing = atan2(py, px);
   if (fabs(range) < 0.0001) {
-    std::cout << "ConvertPolar() - Error - Division by Zero" << std::endl;
+    cout << "MapCartesianToPolar() - Error: Division by Zero" << endl;
     return result;
   }
   // rhodot
